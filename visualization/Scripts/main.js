@@ -47,7 +47,7 @@ const nextButton=playtoolsContainer.querySelector('#next');
 
 
 
-// 烦人的接口!
+// Adapt the replay interface.
 PLAYING_SPEED = 1;
 PLAYING_FPS = 1.25;
 // record_obj
@@ -495,9 +495,9 @@ function initializeGraph(scores){
         },
       },
       {
-        type: 'custom', // 使用 'custom' 类型
-        renderItem: function() {}, // 定义一个空的 renderItem 函数
-        data: [] // 无数据
+        type: 'custom', // Use a custom series.
+        renderItem: function() {}, // An empty renderer reserves the series layout.
+        data: [] // No observations.
       }
     ]
   };
