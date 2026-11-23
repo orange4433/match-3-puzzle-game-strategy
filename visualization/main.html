@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualization</title>
+    <script src="./lib/echarts.min.js"></script>
+    <link rel="stylesheet" href="Styles/style.css">
+  </head>
+
+
+  <body style="padding-top: 20px;margin-bottom:0px;">
+    
+    <div id="side-display">
+      <div id="scores-graph-section">
+        <div id="select-bar">
+          <div class="custom-select">
+            <select name="scores-mode" id="scores-mode">
+                <option value="raw">总得分</option>
+                <option value="difference">分 差</option>
+            </select>
+          </div>
+        </div>
+        <div id="chart" style="width:300px;height: 80vh;"></div>
+      </div>
+    </div>
+
+    <div id="main-display">
+      <div class="sidebar" id="left-sidebar">
+        <h3 class="team-name">
+          BlueTeam<!--Substitue this with the real team name-->
+        </h3>
+        <div class="status">
+          <sapn class="text-of-status">持平</sapn>
+        </div>
+        <div class="total-scores">
+          <div class="sidebar-header">总得分</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="highest-combo">
+          <div class="sidebar-header">最高连消数</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="current-combos">
+          <div class="sidebar-header">当前连消数</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="placeholder"></div>
+
+      </div>
+      <div id="middle-section">
+        <div id="remained-bar-section">
+        </div>
+        <div id="board">
+          <div id="preview-board">
+
+          </div>
+          <div id="main-board">
+            
+          </div>
+        </div>
+      </div>
+      <div class="sidebar" id="right-sidebar">
+        <h3 class="team-name">
+          RedTeam<!--Substitue this with the real team name-->
+        </h3>
+        <div class="status">
+          <sapn class="text-of-status">持平</sapn>
+        </div>
+        <div class="total-scores">
+          <div class="sidebar-header">总得分</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="highest-combo">
+          <div class="sidebar-header">最高连消数</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="current-combos">
+          <div class="sidebar-header">当前连消数</div>
+          <div class="numbers">0</div>
+        </div>
+        <div class="placeholder"></div>
+
+      </div>
+
+      <div id="file-chooser-container">
+        <label for="file-chooser-input" id="file-chooser">请选择一个复盘记录</label>
+        <input type="file" id="file-chooser-input" style="display: none">
+      </div>
+      <div id="playtools-container" style="display: none;">
+        <div>
+          <button id="play" onclick="play()" style="display: none;">
+            播放
+          </button>
+          <button id="stop" onclick="stop()" style="display: inline-block;">
+            暂停
+          </button>
+          <button id="last" onclick="last()" style="display: none;">
+            上一帧
+          </button>
+          <button id="next" onclick="next()" style="display: none;">
+            下一帧
+          </button>
+        </div>
+        <div id="frame-changer">
+          <div>当前回合：<span id="current-turn">0</span><!--（<span id="start-or-end">始</span>于帧<span id="current-turn-start">0</span>--></div>
+          <div>当前帧：<span id="current-frame">0</span></div>
+          <div>总帧数：<span id="total-frame">0</span></div>
+          <input type="number" id="jump-input" min=0 value=0>
+          <button id="jump" onclick="jump()">
+            跳转帧
+          </button>
+        </div>
+        <input type="number" id="speed-input" min=0 value=1>
+        <button id="speed" onclick="speed()">
+          播放倍速
+        </button>
+      </div>
+    </div>
+
+
+
+    <script src="Scripts/main.js"></script>
+
+    <script src="Scripts/Ribbon.js"></script>
+  </body>
+
+
+</html>
