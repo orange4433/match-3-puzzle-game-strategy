@@ -1,6 +1,6 @@
 from interaction import *
-import player1
-import player2
+import group13_agent as player1
+import greedy_agent as player2
 import time
 print('确定先手')
 print("Initializing game...")

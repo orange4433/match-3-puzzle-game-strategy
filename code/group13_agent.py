@@ -6,13 +6,12 @@ N_ROWS = 1200
 COLORS = {'R': '0', 'B': '1', 'G': '2', 'Y': '3', 'P': '4'}
 action_space = [((i, j), (i, j + 1)) for i in range(BOARD_SIZE) for j in range(BOARD_SIZE - 1)] + \
                [((i + 1, j), (i, j)) for i in range(BOARD_SIZE - 1) for j in range(BOARD_SIZE)]
-action_board_dict={}
 class MyBoard:
     def __init__(self, board, colors,score=0,movement=None,valid_movements=None):
         self.size = board.shape[0]
         self.board = board.copy()
         self.colors = colors
-        # These MyBoard attributes support the alpha-beta search tree.
+        # Store state attributes used by the alpha-beta search tree.
         self.score=score
         self.movement=movement
         self.valid_movements=valid_movements
@@ -72,7 +71,7 @@ class MyBoard:
 
         # Return the total score and the number of columns eliminated
         return score, col_eliminated
-    def get_next_state(self, action):# Board state after an action: score and the movement's new_board.
+    def get_next_state(self, action):# Return the successor board, its score and the generating move.
         (x1, y1), (x2, y2) = action
         new_board = MyBoard(board=self.board,colors=np.array(list(COLORS.keys())))
         new_board.change((x1, y1), (x2, y2))
@@ -130,15 +129,18 @@ class MyBoard:
                     operations.append(((j, i), (j, i + 1)))
                     continue
         return operations
-    def get_children(self): # Children are boards obtained from every action in valid_movements.
+    def get_children(self,depth,action_board_dict): # Generate a child board for each scoring move.
         children = []
-        for action in self.get_info():
+        self.valid_movements=self.get_info()
+        if depth==2:
+            move=self.movement
+            action_board_dict[move]=self
+        for action in self.valid_movements:
             new_board = self.get_next_state(action)
-            action_board_dict[action]=new_board
             children.append(new_board)
         children.sort(key=lambda x: x.score, reverse=True)
         return children
-def finder(Board):# Find connected same-color blocks on the current main board.
+def finder(Board):# Find an adjacent same-color pair to leave the board unchanged.
     board=Board.board
     found=0
     for i in range(5):
@@ -153,28 +155,46 @@ def finder(Board):# Find connected same-color blocks on the current main board.
                 return trick_action,found
     return ((0,0),(0,1)),found
     
-def alpha_beta_pruning(Board, depth, alpha, beta, maximizing_player, total_score): # Alpha-beta pruning returns the best action.
-    # Recursion stopping condition:
+def alpha_beta_pruning(Board, depth, alpha, beta, maximizing_player, total_score,is_ahead,action_board_dict,scores): # Return the selected move using alpha-beta pruning.
+    # Stop at the requested search depth.
     if depth == 0:
         return total_score, None
-
-    if maximizing_player:# Maximizing player
+    if maximizing_player:# Our turn: maximize the score difference.
         max_eval = float("-inf")
         best_move = None
-        for child in Board.get_children()[:5]:
-            child_eval, _ = alpha_beta_pruning(child, depth - 1, alpha, beta, False, total_score + child.score)
-            if child_eval > max_eval:
-                max_eval = child_eval
-                best_move = child.movement
+        children_list=Board.get_children(depth,action_board_dict)[:5]
+        l=len(children_list)
+        for i in range(l):
+            child=children_list[i]
+            child_eval, _ = alpha_beta_pruning(child, depth - 1, alpha, beta, False, total_score + child.score,is_ahead,action_board_dict,scores)
+            if depth==3 and not is_ahead:
+                fencha=scores[1]-scores[0]
+                leng=len(action_board_dict[child.movement].valid_movements)
+                if leng<=1:
+                    if action_board_dict[child.movement].score>fencha and leng==0:
+                        if child_eval > max_eval:
+                            max_eval = child_eval
+                            best_move = child.movement
+                    else:
+                        continue
+                else:
+                    if child_eval > max_eval:
+                        max_eval = child_eval
+                        best_move = child.movement
+            else:
+                if child_eval > max_eval:
+                    max_eval = child_eval
+                    best_move = child.movement
             alpha = max(alpha, max_eval)
             if beta <= alpha:
                 break
         return max_eval, best_move
-    else:# Minimizing player
+    else:# Opponent turn: minimize our score difference.
         min_eval = float("inf")
         best_move = None
-        for child in Board.get_children()[:3]:
-            child_eval, _ = alpha_beta_pruning(child, depth - 1, alpha, beta, True, total_score - child.score)
+        
+        for child in Board.get_children(depth,action_board_dict)[:3]:
+            child_eval, _ = alpha_beta_pruning(child, depth - 1, alpha, beta, True, total_score - child.score,is_ahead,action_board_dict,scores)
             if child_eval < min_eval:
                 min_eval = child_eval
                 best_move = child.movement
@@ -229,7 +249,8 @@ def greedy_2(board,valid_movements):
     if choice is not None:
         return choice,value
     return random.choice(action_space),value
-def select(board,time,is_First,move_history,turn_number,scores,opponent_score_list,my_score_list,is_ahead):
+def select(board,time,is_First,move_history,turn_number,scores,opponent_score_list,my_score_list,is_ahead,nobai):
+    action_board_dict={}
     valid_movements=board.valid_movements
     if turn_number<100:
         if time>58.5:
@@ -238,52 +259,55 @@ def select(board,time,is_First,move_history,turn_number,scores,opponent_score_li
         else:
             if turn_number>=3:
                 if is_ahead and opponent_score_list[len(opponent_score_list)-1]==opponent_score_list[len(opponent_score_list)-2]:
-                    # Defend against setup moves while ahead.
+                    # When ahead, undo an opponent move that did not score.
                     if is_First:
                         action=move_history[2*(turn_number-1)-1]
                     else:
                         action = move_history[2*turn_number-2]
                     return action
                 if not is_ahead and opponent_score_list[len(opponent_score_list)-1]==opponent_score_list[len(opponent_score_list)-2] and my_score_list[len(my_score_list)-1]==my_score_list[len(my_score_list)-2]:
-                    # Avoid getting trapped when an opponent interrupts a setup while behind.
-                    _, choice=alpha_beta_pruning(board, 3, float("-inf"),float("inf"),True, 0)
+                    # Break a repeated non-scoring position when behind.
+                    _, choice=alpha_beta_pruning(board, 3, float("-inf"),float("inf"),True, 0,is_ahead,action_board_dict,scores)
                     if choice is not None:
                         return choice
                     else:
                         return random.choice(valid_movements)
-            # Search for the best value regardless of the lead; depth 3 could be reduced while ahead or increased while behind.
-            value,best_move=alpha_beta_pruning(board, 3, float("-inf"),float("inf"),True, 0)
+            # Search three plies in either score position; depth could depend on the lead.
+            value,best_move=alpha_beta_pruning(board, 3, float("-inf"),float("inf"),True, 0,is_ahead,action_board_dict,scores)
             if best_move is not None:
-                if not is_ahead:
-                    next_board=action_board_dict[best_move]
-                    add_value=next_board.score
-                    if scores[0]+add_value>scores[1]:
-                        return best_move
-                    else:
-                        if not next_board.get_info():
-                            return random.choice(valid_movements)
-                if value>=6:
+                #if not is_ahead:
+                    #next_board=action_board_dict[best_move]
+                    #add_value=next_board.score
+                    #if scores[0]+add_value>scores[1]:
+                        #return best_move
+                    #else:
+                     #   if not next_board.get_info():
+                      #      return random.choice(valid_movements)
+                if nobai:
                     return best_move
-                elif value<6:
-                    trick_action,found=finder(board)
-                    if found:
-                        return trick_action
-                    else:
-                        if trick_action not in valid_movements:
+                else:
+                    if value>=6:
+                        return best_move
+                    elif value<6:
+                        trick_action,found=finder(board)
+                        if found:
                             return trick_action
                         else:
-                            for movement in [((0,0),(1,0)),((0,5),(1,5)),((0,5),(0,4)),((5,0),(4,0)),((5,0),(5,1))]:
-                                if not movement in valid_movements:
-                                    return movement
-                            return random.choice(action_space)
+                            if trick_action not in valid_movements:
+                                return trick_action
+                            else:
+                                for movement in [((0,0),(1,0)),((0,5),(1,5)),((0,5),(0,4)),((5,0),(4,0)),((5,0),(5,1))]:
+                                    if not movement in valid_movements:
+                                        return movement
+                                return random.choice(action_space)
             else:
                 return random.choice(valid_movements)
             
-    else:# Take a final-turn risk.
-        if not is_ahead:# While behind
-            if is_First:# First player
+    else:# Apply the final-round policy.
+        if scores[0]<scores[1]:# When behind.
+            if is_First:# First player.
                 choice,value=greedy_2(board,valid_movements)
-                if choice is not None:# What if the score margin is negative?
+                if choice is not None:# The historical final-round policy accepts this move even for a negative margin.
                     return choice
             elif not is_First:
                 choice,value=greedy_1(board,valid_movements)
@@ -295,7 +319,7 @@ def select(board,time,is_First,move_history,turn_number,scores,opponent_score_li
                 choice,value=greedy_2(board,valid_movements)
                 if choice is not None and value>=-fen_cha:
                     return choice
-                else:# Retain this choice for now; finder() may not be appropriate here.
+                else:# Historical fallback: try a board-preserving exchange.
                     trick_action,found=finder(board)
                     if found:
                         return trick_action
@@ -335,7 +359,6 @@ def killer_search_length_1(board, movement):
                 return action
 
 def killer_search_length_2(board, movements):
-    candidates = []
     (x1, y1), (x2, y2) = movements[0]
     (x3, y3), (x4, y4) = movements[1]
     Original_dicts=[
@@ -365,12 +388,11 @@ def killer_search_length_2(board, movements):
                 if not operations:
                     return (x5, y5), (x6, y6)
     return None
-         
         
     
 class Plaser:
     def __init__(self, is_First):
-        # Plaser stores turn order, both score histories, used times (used_time[0] is ours), and both action histories.
+        # Track turn order, score histories, used times (ours at index 0), and move history.
         self.is_First=is_First
         self.my_score_list=[]
         self.opponent_score_list=[]
@@ -387,13 +409,19 @@ class Plaser:
         length=len(valid_movements)
         my_time=self.used_time[0]
         opponent_time=self.used_time[1]
+        print("player1:",opponent_time,scores[1],"player2:",my_time,scores[0])
         is_ahead=0
         if scores[0]>scores[1] or (scores[0]==scores[1] and my_time<opponent_time):
             is_ahead=1
-        if length<=2 and is_ahead:
-            kill_move=killer_search(board,valid_movements,length)
-            if kill_move is not None:
-                return kill_move
-        return select(board,my_time,is_First,move_history,turn_number,scores,opponent_score_list,my_score_list,is_ahead)
+        if length<=2:
+            if is_ahead:
+                kill_move=killer_search(board,valid_movements,length)
+                if kill_move is not None:
+                    return kill_move
+            else:
+                return select(board,my_time,is_First,move_history,turn_number,scores,opponent_score_list,my_score_list,is_ahead,1)
+        return select(board,my_time,is_First,move_history,turn_number,scores,opponent_score_list,my_score_list,is_ahead,0)
         
+
+
 
