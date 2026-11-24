@@ -1,4 +1,4 @@
-# Match-Three Search Agents
+# Strategy Development for a Match-3 Puzzle Game
 
 Algorithms and data-structures coursework implementing a competitive match-three game with an **alpha-beta agent**, a **Monte Carlo tree-search agent**, a board simulator and replay visualization.
 
