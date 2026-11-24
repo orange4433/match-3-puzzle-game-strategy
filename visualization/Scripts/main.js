@@ -70,18 +70,20 @@ const updateChooser=function(object){
 }
 // Get the information of chosen file
 const getInfo=function(file){
+  if (!file) return;
   const reader = new FileReader();
 
   reader.readAsText(file);
   reader.onload = function() {
-    // The information abou the File
-    const {name,type}=file;
-    if (type === "application/json"){
+    try {
       const record=JSON.parse(reader.result);
-      // Initialization
+      if (!Array.isArray(record.frames) || !record.frames.length || !record.scores) {
+        throw new Error('Incomplete replay');
+      }
       initialization(record);
-    } else{
-      alert('请选择一个咖啡脚本宾语注释文件！！！');
+      updateChooser(fileChooser);
+    } catch (error) {
+      alert('无法读取比赛记录，请选择有效的 replay.json 文件。');
     }
   };
   reader.onerror = function() {
@@ -91,7 +93,6 @@ const getInfo=function(file){
 // Add Event Listeners
 fileChooser.nextElementSibling.addEventListener('change',(event)=>{
   getInfo(event.target.files[0]);
-  updateChooser(fileChooser);
 },true)
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
@@ -104,6 +105,8 @@ function startPlaying(){
       if (currentFrame<totalFrames){
         drawFrame(frames[currentFrame]);
         currentFrame++;
+      } else {
+        stop();
       }
     },650/PLAYING_SPEED)
     isPlaying=true;
@@ -117,15 +120,20 @@ let playingCache
 let totalRemains,totalFrames,scores,exitStatus,errorMessage,winner,frames;
 initialization=function(record){
   // Global variables
-  totalFrames=record.totalFrames;
+  totalFrames=Math.min(record.totalFrames, record.frames.length);
   scores=record.scores;
-  exitStatus=record.exitStatus;
+  exitStatus=record.errorStatus ?? record.exitStatus;
   errorMessage=record.errorMessage;
   winner=record.winner;
   frames=record.frames;
   totalRemains=record.totalRemains;
+  if (Array.isArray(record.teamNames) && record.teamNames.length === 2) {
+    leftTeamName.textContent=record.teamNames[0];
+    rightTeamName.textContent=record.teamNames[1];
+  }
 
   totalFrameNumber.innerText=totalFrames-1;
+  jumpInput.max=totalFrames-1;
 
   initializeGraph(scores);
   myChart.setOption(optionAbsolute);
@@ -613,6 +621,7 @@ function initializeGraph(scores){
 /////////////////////////////////////////////////////////////////
 // Play tools
 function play(){
+  if (currentFrame>=totalFrames) currentFrame=0;
   startPlaying();
   playButton.style.display="none";
   stopButton.style.display="inline-block";
@@ -641,15 +650,25 @@ function updateCurrentFrameDisplay(){
   currentFrameNumber.innerText=currentFrame;
 }
 function jump(){
-  currentFrame=parseInt(jumpInput.value);
+  const requested=Number(jumpInput.value);
+  if (!Number.isFinite(requested)) return;
+  currentFrame=Math.max(0, Math.min(totalFrames-1, Math.trunc(requested)));
   drawFrame(frames[currentFrame]);
+  currentFrame++;
 }
 function speed(){
+  const requested=Number(speedInput.value);
+  if (!Number.isFinite(requested) || requested <= 0) {
+    speedInput.value=PLAYING_SPEED;
+    return;
+  }
+  const resume=isPlaying;
   stopPlaying();
-  PLAYING_SPEED=parseFloat(speedInput.value);
-  startPlaying();
+  PLAYING_SPEED=requested;
+  if (resume) startPlaying();
 }
 function next(){
+  if (currentFrame>=totalFrames) return;
   drawFrame(frames[currentFrame]);
   currentFrame++;
 }

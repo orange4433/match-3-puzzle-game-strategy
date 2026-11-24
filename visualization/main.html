@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualization</title>
+    <title>Match-3 Competition Replay</title>
     <script src="./lib/echarts.min.js"></script>
     <link rel="stylesheet" href="Styles/style.css">
   </head>
@@ -85,7 +85,7 @@
 
       <div id="file-chooser-container">
         <label for="file-chooser-input" id="file-chooser">请选择一个复盘记录</label>
-        <input type="file" id="file-chooser-input" style="display: none">
+        <input type="file" id="file-chooser-input" accept=".json,application/json" style="display: none">
       </div>
       <div id="playtools-container" style="display: none;">
         <div>
@@ -106,12 +106,12 @@
           <div>当前回合：<span id="current-turn">0</span><!-- (<span id="start-or-end">start</span> at frame <span id="current-turn-start">0</span> --></div>
           <div>当前帧：<span id="current-frame">0</span></div>
           <div>总帧数：<span id="total-frame">0</span></div>
-          <input type="number" id="jump-input" min=0 value=0>
+          <input type="number" id="jump-input" min=0 step=1 value=0>
           <button id="jump" onclick="jump()">
             跳转帧
           </button>
         </div>
-        <input type="number" id="speed-input" min=0 value=1>
+        <input type="number" id="speed-input" min=0.1 step=0.5 value=1>
         <button id="speed" onclick="speed()">
           播放倍速
         </button>

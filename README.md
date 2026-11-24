@@ -30,6 +30,7 @@ The report records a tuned net-score threshold of **-4**. The recovered competit
 
 | Path | Purpose |
 | --- | --- |
+| `run_match.cmd`, `run_match.py` | One-click local match and automatic offline replay |
 | `code/group13_agent.py` | Primary archived Team 13 competition agent: one-/two-ply scoring helpers, three-ply search and tactical rules |
 | `code/greedy_agent.py` | Course-provided greedy baseline |
 | `code/board.py`, `interaction.py`, `exception_manager.py`, `eraserconfig.py` | Course simulator and runner support |
@@ -39,6 +40,12 @@ The report records a tuned net-score threshold of **-4**. The recovered competit
 | `paper/pkudsa-group13.docx`, `.pdf` | The actual Team 13 project report |
 
 ## Running
+
+On Windows, **double-click `run_match.cmd` in the repository root**. It simulates one match between Team 13 and the greedy baseline, then opens the replay in your default browser. The simulation completes before playback begins; it normally takes several seconds on the current machine.
+
+The generated viewer is `outputs/match.html`. You can reopen this file to watch again without running Python or choosing a JSON file. The page supports pause/play, previous/next frame, frame jumps and playback speed. Its scripts and chart library are bundled, so it needs no web server or internet connection.
+
+For another board, run `python run_match.py --seed 7` from the repository root. Use `--no-browser` to generate the output without opening a browser. Generated replay JSON, HTML and logs stay in the ignored `outputs/` directory.
 
 Use Python 3.11 and install `requirements.txt`. From `code/`, run `python local_debugger.py`. This runs two complete games and writes `replay1.json` and `replay2.json` in that directory. The baseline opponent and starting order are explicit imports in the runner.
 
