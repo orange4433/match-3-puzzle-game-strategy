@@ -34,4 +34,8 @@ The recovered agent and course greedy baseline completed both seed-42 games with
 
 The generated `outputs/match.html` was opened in a separate headless Edge profile using the actual local-file URL. Checks passed for automatic replay loading, team names, rendered pieces, pause, previous/next frame, jump bounds, invalid playback speeds and automatic stopping at the last frame. The final displayed scores matched the game runner, and no JavaScript runtime errors were observed. The viewer uses bundled local assets.
 
+## GitHub Pages entry point
+
+The repository-root `index.html` opens `visualization/main.html?demo=1`, which loads the existing `data/replay1.json` sample. This entry point was tested over a temporary local HTTP server in a separate Edge profile: redirect, sample loading, rendered pieces, final scores and playback controls passed with no JavaScript runtime errors. This adds no browser-side AI simulation; new matches still use the Python runner.
+
 These are local sanity checks against one baseline and seed, not a rerun of the historical ladder or knockout competition. The report's -4 threshold and the archived agent's 6 threshold remain unchanged and are documented as a version difference.

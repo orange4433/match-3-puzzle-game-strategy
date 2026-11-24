@@ -36,7 +36,7 @@ class ReplayExportTests(unittest.TestCase):
         parser = Scripts()
         parser.feed(replay_html(record))
         self.assertEqual(json.loads(parser.payload), record)
-        self.assertEqual(parser.count, 5)
+        self.assertEqual(parser.count, 6)
 
 
 if __name__ == '__main__':

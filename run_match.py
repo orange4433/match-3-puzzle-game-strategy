@@ -15,7 +15,7 @@ def replay_html(record):
     """Reuse the bundled viewer without a server or a file-selection step."""
     html = (ROOT / "visualization" / "main.html").read_text(encoding="utf-8")
     for asset in ["./lib/echarts.min.js", "Styles/style.css",
-                  "Scripts/main.js", "Scripts/Ribbon.js"]:
+                  "Scripts/main.js", "Scripts/demo.js", "Scripts/Ribbon.js"]:
         html = html.replace(f'"{asset}"', f'"../visualization/{asset.removeprefix("./")}"')
     payload = json.dumps(record, ensure_ascii=False).replace("<", "\\u003c")
     boot = '''
